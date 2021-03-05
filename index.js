@@ -9,6 +9,8 @@ const app = express();
 
 app.use(httpLogger);
 
+require('./src');
+
 app.listen(PORT, () => {
   logger.info(`Server listening on port ${PORT}`);
 });
