@@ -10,9 +10,6 @@ const {
 const connectionsFilePath = './app_data/connections.json'
 
 class ConnectionsManager {
-  constructor() {
-
-  }
 
   getAll() {
     try {

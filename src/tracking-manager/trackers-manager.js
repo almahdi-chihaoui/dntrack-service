@@ -19,7 +19,7 @@ class TrackersManager {
 
   }
 
-  add(data) {
+  add(data) { //TODO: more error handling here
     if (data.dbms === 'pgsql') {
       // Add an id and and copy the data in new object
       const idedData = Object.assign({}, data, { id: uuidv4() });
@@ -73,11 +73,12 @@ class TrackersManager {
   delete(id) {
     try {
       // Fetch trackers data
-      const trackersData = jsonFile.fetch(trackersFilePath);
+      let trackersData = jsonFile.fetch(trackersFilePath);
 
       // Stop and delete tracker instance
       this.#trackers
         .find(tracker => tracker.id === id)
+        .instance
         .stopTracker();
 
       this.#trackers = this.#trackers
