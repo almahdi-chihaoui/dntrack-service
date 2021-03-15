@@ -4,14 +4,12 @@ const express = require('express');
 var bodyParser = require('body-parser')
 
 const { httpLogger } = require('./src/middlewares');
-const routes = require('./src/routes');
+const {
+  connectionsRouter,
+  trackersRouter,
+} = require('./src/routes');
 
 const { logger } = require('./src/utils');
-
-const {
-  connectionsManager,
-  trackersManager,
-} = require('./src/tracking-manager');
 
 const PORT = 3005;
 const app = express();
@@ -24,9 +22,8 @@ app.use(bodyParser.json())
 
 app.use(httpLogger);
 
-app.use(routes(trackersManager, connectionsManager));
-
-// require('./src');
+app.use(trackersRouter);
+app.use(connectionsRouter);
 
 // Error handler
 app.use(function (err, req, res, next) {
