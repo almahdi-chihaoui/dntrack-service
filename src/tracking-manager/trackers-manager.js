@@ -2,6 +2,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 
+const { NOT_FOUND } = require('../common/constants');
 const {
   logger,
   jsonFile,
@@ -15,8 +16,37 @@ const connectionsFilePath = './app_data/connections.json';
 class TrackersManager {
   #trackers = [];
 
-  constructor() {
+  getOne(id, dbms) {
+    try {
+      // Fetch trackers data
+      const trackersData = jsonFile.fetch(trackersFilePath);
 
+      // Check if tracker exist
+      if (trackersData && trackersData.length > 0) {
+        const tracker = trackersData.find(tracker => tracker.id === id);
+        if (tracker !== undefined) {
+          return tracker;
+        }
+      }
+
+      // Throw a not found error
+      const err = new Error('tracker not found');
+      err.code = NOT_FOUND;
+      throw err;
+    } catch (err) {
+      logger.error(`[Trackers Manager]-[Get One Tracker] : Could not get tracker, something wrong happened : `, err);
+      throw err;
+    }
+
+  }
+
+  getAll() {
+    try {
+      return jsonFile.fetch(trackersFilePath);
+    } catch (err) {
+      logger.error(`[Trackers Manager]-[Get All Trackers] : Could not get trackers, something wrong happened : `, err);
+      throw err;
+    }
   }
 
   add(data) { //TODO: more error handling here
@@ -67,7 +97,7 @@ class TrackersManager {
   }
 
   update(id, data) {
-
+    //TODO
   }
 
   delete(id) {
@@ -76,10 +106,20 @@ class TrackersManager {
       let trackersData = jsonFile.fetch(trackersFilePath);
 
       // Stop and delete tracker instance
-      this.#trackers
+      const targetTracker = this.#trackers
         .find(tracker => tracker.id === id)
+
+      if (targetTracker === undefined) {
+        const err = new Error('tracker not found');
+        err.code = NOT_FOUND;
+        throw err;
+      }
+
+      targetTracker
         .instance
         .stopTracker();
+
+      targetTracker.instance = null;
 
       this.#trackers = this.#trackers
         .filter(tracker => tracker.id !== id);

@@ -1,35 +1,70 @@
 'use strict'
 
+const { StatusCodes } = require('http-status-codes');
+
 const { logger } = require('../utils');
 
 const router = require('express').Router();
 
 const { trackersManager } = require('../tracking-manager');
+const {
+  INTERNAL_SERVER_ERROR,
+  CREATED,
+  OK,
+} = require('../common/constants');
 
-router.post('/trackers', (req, res, next) => {
+router.get('/trackers/:id', (req, res, next) => {
   try {
-    logger.info(`[Router]-[Post /tracker] : Adding a tracker..`);
-    const id = trackersManager.add(req.body);
-
-    logger.info(`[Router]-[Post /tracker] : Successfully added a tracker..`);
-
-    res.send({ id });
+    logger.info(`[Router]-[Get (one) /trackers] : Getting tracker..`);
+    const tracker = trackersManager.getOne(req.params.id, req.query.dbms);
+    res.status(StatusCodes[OK]);
+    res.send(tracker);
   } catch (err) {
-    logger.error(`[Router]-[Post /tracker] : Something wrong happened: `, err);
+    logger.error(`[Router]-[Get (one) /trackers] : Something wrong happened: `, err);
+    err.status = StatusCodes[err.code || INTERNAL_SERVER_ERROR];
+    next(err);
+  }
+})
+
+router.get('/trackers', (req, res, next) => {
+  try {
+    logger.info(`[Router]-[Get (all) /trackers] : Getting trackers..`);
+    const trackers = trackersManager.getAll();
+    res.status(StatusCodes[OK]);
+    res.send(trackers);
+  } catch (err) {
+    logger.error(`[Router]-[Get (all) /trackers] : Something wrong happened: `, err);
+    err.status = StatusCodes[err.code || INTERNAL_SERVER_ERROR];
     next(err);
   }
 });
 
-router.delete('/trackers', (req, res, next) => {
+router.post('/trackers', (req, res, next) => {
   try {
-    logger.info(`[Router]-[Delete /tracker] : Deleting a tracker.. ${req.query.id}`);
-    trackersManager.delete(req.query.id);
+    logger.info(`[Router]-[Post /trackers] : Adding a tracker..`);
+    const id = trackersManager.add(req.body);
 
-    logger.info(`[Router]-[Delete /tracker] : Successfully added a tracker..`);
-
-    res.sendStatus(200);
+    logger.info(`[Router]-[Post /trackers] : Successfully added a tracker..`);
+    res.status(StatusCodes[CREATED]);
+    res.send({ id });
   } catch (err) {
-    logger.error(`[Router]-[Delete /tracker] : Something wrong happened: `, err);
+    logger.error(`[Router]-[Post /trackers] : Something wrong happened: `, err);
+    err.status = StatusCodes[err.code || INTERNAL_SERVER_ERROR];
+    next(err);
+  }
+});
+
+router.delete('/trackers/:id', (req, res, next) => {
+  try {
+    logger.info(`[Router]-[Delete /trackers] : Deleting a tracker..`);
+    trackersManager.delete(req.params.id);
+
+    logger.info(`[Router]-[Delete /trackers] : Successfully deleted a tracker..`);
+
+    res.sendStatus(StatusCodes[OK]);
+  } catch (err) {
+    logger.error(`[Router]-[Delete /trackers] : Something wrong happened: `, err);
+    err.status = StatusCodes[err.code || INTERNAL_SERVER_ERROR];
     next(err);
   }
 });
