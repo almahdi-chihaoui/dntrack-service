@@ -6,7 +6,11 @@ const { logger } = require('../utils');
 
 const router = require('express').Router();
 
-const { trackersManager } = require('../tracking-manager');
+const {
+  connectionsManager,
+  trackersManager,
+} = require('../tracking-manager');
+
 const {
   INTERNAL_SERVER_ERROR,
   CREATED,
@@ -42,7 +46,13 @@ router.get('/trackers', (req, res, next) => {
 router.post('/trackers', (req, res, next) => {
   try {
     logger.info(`[Router]-[Post /trackers] : Adding a tracker..`);
-    const id = trackersManager.add(req.body);
+    const data = req.body;
+
+    // Get the tracker's connection details
+    const connection = connectionsManager.getOne(data.connection, data.dbms);
+
+    // Add the tracker and get its id
+    const id = trackersManager.add(data, connection);
 
     logger.info(`[Router]-[Post /trackers] : Successfully added a tracker..`);
     res.status(StatusCodes[CREATED]);
