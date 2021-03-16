@@ -49,6 +49,7 @@ router.post('/trackers', (req, res, next) => {
     const data = req.body;
 
     // Get the tracker's connection details
+    logger.info(`[Router]-[Post /trackers] : Getting tracker's connection details tracker..`);
     const connection = connectionsManager.getOne(data.connection, data.dbms);
 
     // Add the tracker and get its id

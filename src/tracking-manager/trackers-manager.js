@@ -77,7 +77,7 @@ class TrackersManager {
         return idedData.id;
       }
     } catch (err) {
-      logger.error(`[Trackers Manager]-[Add Tracker] : Could not delete tracker, something wrong happened : `, err);
+      logger.error(`[Trackers Manager]-[Add Tracker] : Could not add tracker, something wrong happened : `, err);
       throw err;
     }
 
