@@ -10,6 +10,7 @@ const {
 } = require('./src/routes');
 
 const { logger } = require('./src/utils');
+const { INTERNAL_SERVER_ERROR } = require('./src/common/constants');
 
 const PORT = 3005;
 const app = express();
@@ -27,7 +28,7 @@ app.use(connectionsRouter);
 
 // Error handler
 app.use(function (err, req, res, next) {
-  res.status(err.status || 500);
+  res.status(err.status || INTERNAL_SERVER_ERROR);
   res.send({
     type: 'error',
     status: err.status,
