@@ -39,10 +39,10 @@ router.get('/connections', (req, res,  next) => {
   }
 });
 
-router.post('/connections', (req, res, next) => {
+router.post('/connections', async (req, res, next) => {
   try {
     logger.info(`[Router]-[Post /connections] : Adding a connection..`);
-    const id = connectionsManager.add(req.body, req.query.dbms);
+    const id = await connectionsManager.add(req.body, req.query.dbms);
 
     logger.info(`[Router]-[Post /connections] : Successfully added a connection..`);
     res.status(StatusCodes[CREATED]);

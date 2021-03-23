@@ -7,6 +7,7 @@ const {
   logger,
   jsonFile,
 } = require('../utils');
+const DbsTrackers = require('./trackers');
 
 const connectionsFilePath = './app_data/connections.json'
 
@@ -47,8 +48,11 @@ class ConnectionsManager {
     }
   }
 
-  add(data, dbms) {
+  async add(data, dbms) {
     try {
+      // Test connection
+      await DbsTrackers[dbms].testConnection(data);
+
       // Add an id and and copy the data in new object
       const idedData = Object.assign({}, data, { id: uuidv4() });
 

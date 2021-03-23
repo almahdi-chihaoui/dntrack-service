@@ -15,7 +15,7 @@ class MongoDBTracker {
     this.#ttr = ttr;
     this.#query = query
 
-    this.#uri = `${connection.protocol}://${encodeURI(connection.user)}:${encodeURI(connection.password)}@${connection.host}/${encodeURI(connection.database)}?retryWrites=true&w=majority`;
+    this.#uri = MongoDBTracker.getUri(connection);
   }
 
 
@@ -93,9 +93,9 @@ class MongoDBTracker {
     }
   }
 
-  async testConnection() {
+  static async testConnection(connection) {
     logger.info('[mongoDBTracker] : Testing connection to the MongoDB client..');
-    const client = new MongoClient(this.#uri, {
+    const client = new MongoClient(MongoDBTracker.getUri(connection), {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
@@ -108,6 +108,10 @@ class MongoDBTracker {
     } finally {
       await client.close();
     }
+  }
+
+  static getUri(connection) {
+    return `${connection.protocol}://${encodeURI(connection.user)}:${encodeURI(connection.password)}@${connection.host}/${encodeURI(connection.database)}?retryWrites=true&w=majority`;
   }
 
   stopTracker() {
