@@ -7,8 +7,11 @@ const {
   logger,
   jsonFile,
 } = require('../utils');
+const MongoDBTracker = require('./trackers/mongodbTracker');
 
 const PgsqlTracker = require('./trackers/pgsqlTracker');
+
+const DbsTrackers = require('./trackers');
 
 const trackersFilePath = './app_data/trackers.json';
 
@@ -48,34 +51,39 @@ class TrackersManager {
     }
   }
 
-  add(data, connection) {
+  async add(data, connection) {
     try {
-      if (data.dbms === 'pgsql') {
-        // Fetch trackers data
-        let trackersData = jsonFile.fetch(trackersFilePath);
+      // Fetch trackers data
+      let trackersData = jsonFile.fetch(trackersFilePath);
 
-        // Add an id and and copy the data in new object
-        const idedData = Object.assign({}, data, { id: uuidv4() });
+      // Add an id and and copy the data in new object
+      const idedData = Object.assign({}, data, { id: uuidv4() });
 
-        // Start a new pgsqlTracker instance
-        const pgsqlTracker = new PgsqlTracker(connection, idedData.query, idedData.ttr);
-        // pgsqlTracker.startTracker(data.resource);
-
-        // Store the new pgsqlTracker instance
-        this.#trackers = this.#trackers.concat([
-          {
-            id: idedData.id,
-            instance: pgsqlTracker,
-          }
-        ]);
-
-        // Add data and dispatch
-        trackersData = trackersData.concat([idedData]);
-        jsonFile.dispatch(trackersData, trackersFilePath);
-
-        // Return the id of the newly added tracker
-        return idedData.id;
+      // Start a new tracker instance
+      let tracker;
+      try {
+        tracker = new DbsTrackers[data.dbms](connection, idedData.query, idedData.ttr);
+        await tracker.start();
+      } catch (err) {
+        logger.error(`[Trackers Manager]-[Add Tracker] : Could not start a new tracker instance, something wrong happened : `, err);
+        throw err;
       }
+
+
+      // Store the new tracker instance
+      this.#trackers = this.#trackers.concat([
+        {
+          id: idedData.id,
+          instance: tracker,
+        }
+      ]);
+
+      // Add data and dispatch
+      trackersData = trackersData.concat([idedData]);
+      jsonFile.dispatch(trackersData, trackersFilePath);
+
+      // Return the id of the newly added tracker
+      return idedData.id;
     } catch (err) {
       logger.error(`[Trackers Manager]-[Add Tracker] : Could not add tracker, something wrong happened : `, err);
       throw err;
