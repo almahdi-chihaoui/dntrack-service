@@ -69,7 +69,7 @@ class PgsqlTracker {
     });
   }
 
-  async startTracker(queueName) {
+  async start(queueName) {
     try {
       logger.info('[pgsqlTracker] : Testing connection to the database..');
       await this.#testDataBaseConnection();

@@ -43,7 +43,7 @@ router.get('/trackers', (req, res, next) => {
   }
 });
 
-router.post('/trackers', (req, res, next) => {
+router.post('/trackers', async (req, res, next) => {
   try {
     logger.info(`[Router]-[Post /trackers] : Adding a tracker..`);
     const data = req.body;
@@ -53,7 +53,7 @@ router.post('/trackers', (req, res, next) => {
     const connection = connectionsManager.getOne(data.connection, data.dbms);
 
     // Add the tracker and get its id
-    const id = trackersManager.add(data, connection);
+    const id = await trackersManager.add(data, connection);
 
     logger.info(`[Router]-[Post /trackers] : Successfully added a tracker..`);
     res.status(StatusCodes[CREATED]);
