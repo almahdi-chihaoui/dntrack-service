@@ -19,8 +19,8 @@ class MongoDBTracker {
   }
 
 
-  async #queryDataBase() {
-    logger.info('[mongoDBTracker] : Connecting the MongoDB client..');
+  #queryDataBase() {
+    logger.info('[mongoDBTracker] : Connecting the MongoDB server..');
     const client = new MongoClient(this.#uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -94,7 +94,7 @@ class MongoDBTracker {
   }
 
   static async testConnection(connection) {
-    logger.info('[mongoDBTracker] : Testing connection to the MongoDB client..');
+    logger.info('[mongoDBTracker] : Testing connection to the MongoDB server..');
     const client = new MongoClient(MongoDBTracker.getUri(connection), {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -102,6 +102,7 @@ class MongoDBTracker {
 
     try {
       await client.connect();
+      logger.info('[mongoDBTracker] : Connection to the MongoDB server was successful');
     } catch (err) {
       logger.error('[mongoDBTracker] : Something wrong happened while testing the connection: ', err);
       throw err;
