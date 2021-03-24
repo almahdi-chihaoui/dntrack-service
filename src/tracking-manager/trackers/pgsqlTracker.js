@@ -1,84 +1,77 @@
 'use strict'
 
 const amqp = require('amqplib/callback_api');
-const Pool = require('pg').Pool;
+const {Client, Pool} = require('pg');
 
 const { logger } = require('../../utils');
 
 class PgsqlTracker {
-  #pool;
+  #connection;
   #tracker;
   #ttr;
   #query;
 
   constructor(connection, query, ttr) {
-    this.#pool = new Pool(connection);
+    this.#connection = connection;
     this.#ttr = ttr;
     this.#query = query;
   }
 
-  async #testDataBaseConnection() {
+  #queryDataBase(connection, query) {
+    logger.info('[pgsqlTracker] : Connecting to the PostgreSQL server..');
+    const client = new Client(connection);
+
     try {
-      await this.#pool.connect();
+      client.connect();
+
+      // Execute the query asynchronously
+      client.query(query)
+        .then(res => {
+          console.log(res.rows);
+          // TODO send results to rabbitmq server
+        })
+        .catch(err => {
+          logger.error('[pgsqlTracker] : Error executing query', err);
+          logger.info('[pgsqlTracker] : Stopping the tracker..')
+          this.stopTracker();
+        })
+        .finally(() => {
+          client.end();
+        })
+
     } catch (err) {
-      logger.error('Error connecting to the database', err.stack);
+      logger.error('[pgsqlTracker] : Something wrong happened while validating the query: ', err);
       throw err;
     }
   }
 
-  #queryDataBase(queueName) {
-    this.#pool.connect((err, client, release) => {
-      if (err) {
-        logger.error('Error acquiring client', err.stack);
-        throw err;
-      }
+  async #validateQuery(connection, query) {
+    logger.info('[pgsqlTracker] : Validating query..');
+    const client = new Client(connection);
 
-      client.query(this.#query, (err, result) => {
-        release();
-        if (err) {
-          logger.error('Error executing query', err.stack);
-          throw err;
-        }
-        console.log(result.rows);
+    try {
+      await client.connect();
 
-        // amqp.connect('amqp://localhost', function (error0, connection) {
-        //   if (error0) {
-        //     throw error0;
-        //   }
-        //   connection.createChannel(function (error1, channel) {
-        //     if (error1) {
-        //       throw error1;
-        //     }
+      // Execute the query
+      const queryRes = await client.query(query);
 
-        //     channel.assertQueue(queueName, {
-        //       durable: true
-        //     });
-
-        //     channel.sendToQueue(queueName, Buffer.from(result.rows));
-        //     console.log(" [x] Sent %s", result.rows);
-        //   });
-
-        //   setTimeout(function () {
-        //     connection.close();
-        //   }, 500);
-        // });
-
-
-      });
-
-    });
+      // TODO: Validate queryRes
+      console.log(queryRes.rows);
+    } catch (err) {
+      logger.error('[pgsqlTracker] : Something wrong happened while validating the query: ', err);
+      throw err;
+    } finally {
+      await client.end();
+    }
   }
 
-  async start(queueName) {
+  async start() {
     try {
-      logger.info('[pgsqlTracker] : Testing connection to the database..');
-      await this.#testDataBaseConnection();
-
-      logger.info('[pgsqlTracker] : Connection to the database is successful');
       logger.info(`[pgsqlTracker] : Starting the tracker with a ttr: ${this.#ttr}`);
-      this.#queryDataBase();
+      await this.#validateQuery(this.#connection, this.#query);
+      this.#queryDataBase(this.#connection, this.#query);
       this.#tracker = setInterval(() => {
-        this.#queryDataBase(queueName);
+        this.#queryDataBase(this.#connection, this.#query);
       }, this.#ttr * 1000);
     } catch (err) {
       logger.error(err);
@@ -88,6 +81,21 @@ class PgsqlTracker {
 
   stopTracker() {
     clearInterval(this.#tracker);
+  }
+
+  static async testConnection(connection) {
+    const client = new Client(connection);
+    try {
+      logger.info('[pgsqlTracker] : Testing connection to the PostgreSQL server..');
+      await client.connect();
+      logger.info('[pgsqlTracker] : Connection to the PostgreSQL server was successful');
+
+    } catch (err) {
+      logger.error('[pgsqlTracker] : Something wrong happened while testing the connection: ', err);
+      throw err;
+    } finally {
+      await client.end();
+    }
   }
 }
 
