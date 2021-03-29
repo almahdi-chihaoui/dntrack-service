@@ -2,6 +2,7 @@
 
 const amqp = require('amqplib/callback_api');
 const { MongoClient } = require('mongodb');
+const { MessageBroker } = require('../../message-broker');
 
 const { logger } = require('../../utils');
 
@@ -10,12 +11,13 @@ class MongoDBTracker {
   #ttr;
   #query;
   #uri;
+  #messageBroker;
 
-  constructor(connection, query, ttr) {
+  constructor(connection, query, ttr, messageBrokerConnection) {
     this.#ttr = ttr;
-    this.#query = query
-
+    this.#query = query;
     this.#uri = MongoDBTracker.getUri(connection);
+    this.#messageBroker = new MessageBroker(messageBrokerConnection);
   }
 
 
@@ -38,6 +40,7 @@ class MongoDBTracker {
           qb(db)
             .then(res => {
               console.log(res);
+              this.#messageBroker.sendMessage('test', JSON.stringify(res));
             }).catch(err => {
               throw err;
             }).finally(() => {
@@ -84,6 +87,7 @@ class MongoDBTracker {
     try {
       logger.info(`[mongoDBTracker] : Starting the tracker with a ttr: ${this.#ttr}`);
       await this.#validateQuery();
+      await this.#messageBroker.init();
       this.#tracker = setInterval(() => {
         this.#queryDataBase();
       }, this.#ttr * 1000);
@@ -91,6 +95,11 @@ class MongoDBTracker {
       logger.error(err);
       throw (err);
     }
+  }
+  
+  stopTracker() {
+    clearInterval(this.#tracker);
+    this.#messageBroker.closeChannel();
   }
 
   static async testConnection(connection) {
@@ -115,9 +124,7 @@ class MongoDBTracker {
     return `${connection.protocol}://${encodeURI(connection.user)}:${encodeURI(connection.password)}@${connection.host}/${encodeURI(connection.database)}?retryWrites=true&w=majority`;
   }
 
-  stopTracker() {
-    clearInterval(this.#tracker);
-  }
+  
 }
 
 module.exports = MongoDBTracker;

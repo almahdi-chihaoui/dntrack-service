@@ -12,11 +12,13 @@ const MongoDBTracker = require('./trackers/mongodbTracker');
 const PgsqlTracker = require('./trackers/pgsqlTracker');
 
 const DbsTrackers = require('./trackers');
+const { getAmqpConnection } = require('../message-broker');
 
 const trackersFilePath = './app_data/trackers.json';
 
 class TrackersManager {
   #trackers = [];
+  #messageBrokerConnection = null;
 
   getOne(id, dbms) {
     try {
@@ -62,7 +64,18 @@ class TrackersManager {
       // Start a new tracker instance
       let tracker;
       try {
-        tracker = new DbsTrackers[data.dbms](connection, idedData.query, idedData.ttr);
+        // Get a message broker connection if there isn't any
+        if (!this.#messageBrokerConnection) {
+          this.#messageBrokerConnection = await getAmqpConnection();
+        }
+
+        tracker = new DbsTrackers[data.dbms](
+          connection,
+          idedData.query,
+          idedData.ttr,
+          this.#messageBrokerConnection,
+        );
+
         await tracker.start();
       } catch (err) {
         logger.error(`[Trackers Manager]-[Add Tracker] : Could not start a new tracker instance, something wrong happened : `, err);
