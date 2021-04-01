@@ -1,5 +1,3 @@
-'use strict'
-
 const MongoDBTracker = require('./mongodbTracker');
 const PgsqlTracker = require('./pgsqlTracker');
 

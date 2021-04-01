@@ -1,6 +1,4 @@
-'use strict'
-
-const amqp = require('amqplib/callback_api');
+/* eslint-disable no-new-func */
 const { MongoClient } = require('mongodb');
 const { MessageBroker } = require('../../message-broker');
 
@@ -8,9 +6,13 @@ const { logger } = require('../../utils');
 
 class MongoDBTracker {
   #tracker;
+
   #ttr;
+
   #query;
+
   #uri;
+
   #messageBroker;
 
   constructor(connection, query, ttr, messageBrokerConnection) {
@@ -19,7 +21,6 @@ class MongoDBTracker {
     this.#uri = MongoDBTracker.getUri(connection);
     this.#messageBroker = new MessageBroker(messageBrokerConnection);
   }
-
 
   #queryDataBase() {
     logger.info('[mongoDBTracker] : Connecting the MongoDB server..');
@@ -34,20 +35,19 @@ class MongoDBTracker {
           const db = client.db();
 
           // DANGER !!
-          /* TODO (pinned): specify in the README.md that this is a huge security issue and emphasize that the app should be used locally or within the corporate VPN */
+          /* TODO (pinned): specify in the README.md that this is a huge security issue
+          and emphasize that the app should be used locally or within the corporate VPN */
           const qb = new Function(this.#query)();
 
           qb(db)
-            .then(res => {
-              console.log(res);
+            .then((res) => {
               this.#messageBroker.sendMessage('test', JSON.stringify(res));
-            }).catch(err => {
+            }).catch((err) => {
               throw err;
             }).finally(() => {
               client.close();
-            })
-
-        }).catch(err => {
+            });
+        }).catch((err) => {
           throw err;
         });
     } catch (err) {
@@ -68,13 +68,14 @@ class MongoDBTracker {
       const db = client.db();
 
       // DANGER !!
-      /* TODO (pinned): specify in the README.md that this is a huge security issue and emphasize that the app should be used locally or within the corporate VPN */
+      /* TODO (pinned): specify in the README.md that this is a huge security issue
+      and emphasize that the app should be used locally or within the corporate VPN */
       const qb = new Function(this.#query)();
 
+      // eslint-disable-next-line no-unused-vars
       const queryRes = await qb(db);
 
       // TODO: Validate queryRes
-      console.log(queryRes);
     } catch (err) {
       logger.error('[mongoDBTracker] : Something wrong happened while testing the connection: ', err);
       throw err;
@@ -96,7 +97,7 @@ class MongoDBTracker {
       throw (err);
     }
   }
-  
+
   stopTracker() {
     clearInterval(this.#tracker);
     this.#messageBroker.closeChannel();
@@ -123,8 +124,6 @@ class MongoDBTracker {
   static getUri(connection) {
     return `${connection.protocol}://${encodeURI(connection.user)}:${encodeURI(connection.password)}@${connection.host}/${encodeURI(connection.database)}?retryWrites=true&w=majority`;
   }
-
-  
 }
 
 module.exports = MongoDBTracker;

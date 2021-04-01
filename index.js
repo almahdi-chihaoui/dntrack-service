@@ -1,8 +1,6 @@
-'use strict'
-
 const express = require('express');
-var bodyParser = require('body-parser')
 
+const { StatusCodes } = require('http-status-codes');
 const { httpLogger } = require('./src/middlewares');
 const {
   connectionsRouter,
@@ -11,16 +9,11 @@ const {
 
 const { logger } = require('./src/utils');
 const { INTERNAL_SERVER_ERROR } = require('./src/common/constants');
-const { StatusCodes } = require('http-status-codes');
 
 const PORT = 3005;
 const app = express();
 
-// Parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
-
-// Parse application/json
-app.use(bodyParser.json())
+app.use(express.json());
 
 app.use(httpLogger);
 
@@ -28,13 +21,14 @@ app.use(trackersRouter);
 app.use(connectionsRouter);
 
 // Error handler
-app.use(function (err, req, res, next) {
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
   res.status(err.status || StatusCodes[INTERNAL_SERVER_ERROR]);
   res.send({
     type: 'error',
     status: err.status,
     message: err.message,
-    stack: req.app.get('env') === 'development' ? err.stack : undefined
+    stack: req.app.get('env') === 'development' ? err.stack : undefined,
   });
 });
 

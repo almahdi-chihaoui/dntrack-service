@@ -1,5 +1,3 @@
-'use strict'
-
 const TrackersManager = require('./trackers-manager');
 const ConnectionsManager = require('./connections-manager');
 
@@ -9,4 +7,4 @@ const connectionsManager = new ConnectionsManager();
 module.exports = {
   trackersManager,
   connectionsManager,
-}
+};

@@ -1,14 +1,15 @@
-'use strict'
-
-const amqp = require('amqplib/callback_api');
-const {Client, Pool} = require('pg');
+/* eslint-disable class-methods-use-this */
+const { Client } = require('pg');
 
 const { logger } = require('../../utils');
 
 class PgsqlTracker {
   #connection;
+
   #tracker;
+
   #ttr;
+
   #query;
 
   constructor(connection, query, ttr) {
@@ -26,19 +27,18 @@ class PgsqlTracker {
 
       // Execute the query asynchronously
       client.query(query)
-        .then(res => {
+        .then((res) => {
           console.log(res.rows);
           // TODO send results to rabbitmq server
         })
-        .catch(err => {
+        .catch((err) => {
           logger.error('[pgsqlTracker] : Error executing query', err);
-          logger.info('[pgsqlTracker] : Stopping the tracker..')
+          logger.info('[pgsqlTracker] : Stopping the tracker..');
           this.stopTracker();
         })
         .finally(() => {
           client.end();
-        })
-
+        });
     } catch (err) {
       logger.error('[pgsqlTracker] : Something wrong happened while validating the query: ', err);
       throw err;
@@ -75,7 +75,7 @@ class PgsqlTracker {
       }, this.#ttr * 1000);
     } catch (err) {
       logger.error(err);
-      throw(err);
+      throw (err);
     }
   }
 
@@ -89,7 +89,6 @@ class PgsqlTracker {
       logger.info('[pgsqlTracker] : Testing connection to the PostgreSQL server..');
       await client.connect();
       logger.info('[pgsqlTracker] : Connection to the PostgreSQL server was successful');
-
     } catch (err) {
       logger.error('[pgsqlTracker] : Something wrong happened while testing the connection: ', err);
       throw err;

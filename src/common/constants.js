@@ -4,4 +4,4 @@ module.exports = {
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
   OK: 'OK',
   NOT_FOUND: 'NOT_FOUND',
-}
+};

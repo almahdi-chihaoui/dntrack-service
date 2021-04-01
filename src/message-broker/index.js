@@ -1,5 +1,3 @@
-'use strict'
-
 const amqp = require('amqplib');
 
 const { logger } = require('../utils');
@@ -15,9 +13,9 @@ const getAmqpConnection = async () => {
     logger.error('[messageBroker] : Something wrong happened while trying to connect to RabbitMQ server!', err);
     throw err;
   }
-}
+};
 
 module.exports = {
   getAmqpConnection,
   MessageBroker,
-}
+};

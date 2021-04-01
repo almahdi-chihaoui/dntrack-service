@@ -1,9 +1,8 @@
-'use strict'
-
 const { logger } = require('../utils');
 
 class MessageBroker {
   #connection;
+
   #channel;
 
   constructor(connection) {

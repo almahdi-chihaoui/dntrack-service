@@ -1,5 +1,4 @@
-'use strict'
-
+/* eslint-disable class-methods-use-this */
 const { v4: uuidv4 } = require('uuid');
 
 const { NOT_FOUND } = require('../common/constants');
@@ -7,9 +6,6 @@ const {
   logger,
   jsonFile,
 } = require('../utils');
-const MongoDBTracker = require('./trackers/mongodbTracker');
-
-const PgsqlTracker = require('./trackers/pgsqlTracker');
 
 const DbsTrackers = require('./trackers');
 const { getAmqpConnection } = require('../message-broker');
@@ -18,16 +14,17 @@ const trackersFilePath = './app_data/trackers.json';
 
 class TrackersManager {
   #trackers = [];
+
   #messageBrokerConnection = null;
 
-  getOne(id, dbms) {
+  getOne(id) {
     try {
       // Fetch trackers data
       const trackersData = jsonFile.fetch(trackersFilePath);
 
       // Check if tracker exist
       if (trackersData && trackersData.length > 0) {
-        const tracker = trackersData.find(tracker => tracker.id === id);
+        const tracker = trackersData.find((trckr) => trckr.id === id);
         if (tracker !== undefined) {
           return tracker;
         }
@@ -38,17 +35,16 @@ class TrackersManager {
       err.code = NOT_FOUND;
       throw err;
     } catch (err) {
-      logger.error(`[Trackers Manager]-[Get One Tracker] : Could not get tracker, something wrong happened : `, err);
+      logger.error('[Trackers Manager]-[Get One Tracker] : Could not get tracker, something wrong happened : ', err);
       throw err;
     }
-
   }
 
   getAll() {
     try {
       return jsonFile.fetch(trackersFilePath);
     } catch (err) {
-      logger.error(`[Trackers Manager]-[Get All Trackers] : Could not get trackers, something wrong happened : `, err);
+      logger.error('[Trackers Manager]-[Get All Trackers] : Could not get trackers, something wrong happened : ', err);
       throw err;
     }
   }
@@ -59,7 +55,7 @@ class TrackersManager {
       let trackersData = jsonFile.fetch(trackersFilePath);
 
       // Add an id and and copy the data in new object
-      const idedData = Object.assign({}, data, { id: uuidv4() });
+      const idedData = { ...data, id: uuidv4() };
 
       // Start a new tracker instance
       let tracker;
@@ -78,17 +74,16 @@ class TrackersManager {
 
         await tracker.start();
       } catch (err) {
-        logger.error(`[Trackers Manager]-[Add Tracker] : Could not start a new tracker instance, something wrong happened : `, err);
+        logger.error('[Trackers Manager]-[Add Tracker] : Could not start a new tracker instance, something wrong happened : ', err);
         throw err;
       }
-
 
       // Store the new tracker instance
       this.#trackers = this.#trackers.concat([
         {
           id: idedData.id,
           instance: tracker,
-        }
+        },
       ]);
 
       // Add data and dispatch
@@ -98,14 +93,13 @@ class TrackersManager {
       // Return the id of the newly added tracker
       return idedData.id;
     } catch (err) {
-      logger.error(`[Trackers Manager]-[Add Tracker] : Could not add tracker, something wrong happened : `, err);
+      logger.error('[Trackers Manager]-[Add Tracker] : Could not add tracker, something wrong happened : ', err);
       throw err;
     }
-
   }
 
-  update(id, data) {
-    //TODO
+  update() {
+    // TODO
   }
 
   delete(id) {
@@ -115,7 +109,7 @@ class TrackersManager {
 
       // Stop and delete tracker instance
       const targetTracker = this.#trackers
-        .find(tracker => tracker.id === id)
+        .find((tracker) => tracker.id === id);
 
       if (targetTracker === undefined) {
         const err = new Error('tracker not found');
@@ -130,17 +124,17 @@ class TrackersManager {
       targetTracker.instance = null;
 
       this.#trackers = this.#trackers
-        .filter(tracker => tracker.id !== id);
+        .filter((tracker) => tracker.id !== id);
 
       // Delete tracker data and dispatch
       trackersData = trackersData
-        .filter(tracker => tracker.id !== id);
+        .filter((tracker) => tracker.id !== id);
       jsonFile.dispatch(trackersData, trackersFilePath);
     } catch (err) {
-      logger.error(`[Trackers Manager]-[Delete Tracker] : Could not delete tracker, something wrong happened : `, err);
+      logger.error('[Trackers Manager]-[Delete Tracker] : Could not delete tracker, something wrong happened : ', err);
       throw err;
     }
   }
 }
 
-module.exports = TrackersManager
+module.exports = TrackersManager;

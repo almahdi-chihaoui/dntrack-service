@@ -1,5 +1,4 @@
-'use strict'
-
+/* eslint-disable class-methods-use-this */
 const { v4: uuidv4 } = require('uuid');
 
 const { NOT_FOUND } = require('../common/constants');
@@ -9,7 +8,7 @@ const {
 } = require('../utils');
 const DbsTrackers = require('./trackers');
 
-const connectionsFilePath = './app_data/connections.json'
+const connectionsFilePath = './app_data/connections.json';
 
 class ConnectionsManager {
   getOne(id, dbms) {
@@ -20,8 +19,7 @@ class ConnectionsManager {
       // Check if connection exist
       if (connectionsData[dbms]
         && connectionsData[dbms].length > 0) {
-
-        const connection = connectionsData[dbms].find(connection => connection.id === id);
+        const connection = connectionsData[dbms].find((cnx) => cnx.id === id);
         if (connection !== undefined) {
           return connection;
         }
@@ -32,18 +30,16 @@ class ConnectionsManager {
       err.code = NOT_FOUND;
       throw err;
     } catch (err) {
-      logger.error(`[Connections Manager]-[Get One Connection] : Could not get connection, something wrong happened : `, err);
+      logger.error('[Connections Manager]-[Get One Connection] : Could not get connection, something wrong happened : ', err);
       throw err;
     }
-
   }
-
 
   getAll() {
     try {
       return jsonFile.fetch(connectionsFilePath);
     } catch (err) {
-      logger.error(`[Connections Manager]-[Get All Connections] : Could not get connections, something wrong happened : `, err);
+      logger.error('[Connections Manager]-[Get All Connections] : Could not get connections, something wrong happened : ', err);
       throw err;
     }
   }
@@ -54,13 +50,13 @@ class ConnectionsManager {
       await DbsTrackers[dbms].testConnection(data);
 
       // Add an id and and copy the data in new object
-      const idedData = Object.assign({}, data, { id: uuidv4() });
+      const idedData = { ...data, id: uuidv4() };
 
       // Fetch connections data
       const connectionsData = jsonFile.fetch(connectionsFilePath);
 
       // Add data and dispatch
-      logger.info(`[Connections Manager]-[Add Connection] : Adding a new connection..`);
+      logger.info('[Connections Manager]-[Add Connection] : Adding a new connection..');
       if (connectionsData[dbms] && connectionsData[dbms].length > 0) {
         connectionsData[dbms] = connectionsData[dbms].concat([idedData]);
       } else {
@@ -72,14 +68,13 @@ class ConnectionsManager {
       logger.info(`[Connections Manager]-[Add Connection] : Connection with id ${idedData.id} was added successfully`);
       return idedData.id;
     } catch (err) {
-      logger.error(`[Connections Manager]-[Add Connection] : Could not add connection, something wrong happened : `, err);
+      logger.error('[Connections Manager]-[Add Connection] : Could not add connection, something wrong happened : ', err);
       throw err;
     }
-
   }
 
-  update(id, dbms, data) {
-    //TODO
+  update() {
+    // TODO
   }
 
   delete(id, dbms) {
@@ -90,11 +85,11 @@ class ConnectionsManager {
       // Check if connection exist
       if (connectionsData[dbms]
         && connectionsData[dbms].length > 0
-        && connectionsData[dbms].find(connection => connection.id === id) !== undefined) {
+        && connectionsData[dbms].find((connection) => connection.id === id) !== undefined) {
         // Delete connection data and dispatch
         connectionsData[dbms] = connectionsData[dbms]
-          .filter(connection => connection.id !== id);
-        
+          .filter((connection) => connection.id !== id);
+
         jsonFile.dispatch(connectionsData, connectionsFilePath);
 
         logger.info(`[Connections Manager]-[Delete Connection] : Connection with id ${id} was deleted successfully`);
@@ -104,12 +99,10 @@ class ConnectionsManager {
         err.code = NOT_FOUND;
         throw err;
       }
-
     } catch (err) {
-      logger.error(`[Connections Manager]-[Delete Connection] : Could not delete connection, something wrong happened : `, err);
+      logger.error('[Connections Manager]-[Delete Connection] : Could not delete connection, something wrong happened : ', err);
       throw err;
     }
-
   }
 }
 
