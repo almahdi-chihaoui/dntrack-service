@@ -5,17 +5,17 @@ const logger = require('./logger');
 function fetch(path) {
   try {
     logger.info(`[JSON File Service]-[Fetch]: Reading from file ${path}..`);
+    if (!fs.existsSync(path)) {
+      logger.error(`[JSON File Service]-[Fetch]: File ${path} not found!`);
+      return undefined;
+    }
     const rawdata = fs.readFileSync(path);
     const data = JSON.parse(rawdata);
 
     logger.info('[JSON File Service]-[Fetch]: Done');
     return data;
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      logger.error(`[JSON File Service]-[Fetch]: File ${path} not found!`);
-    } else {
-      logger.error('[JSON File Service]-[Fetch]: Something wrong happened: ', error);
-    }
+    logger.error('[JSON File Service]-[Fetch]: Something wrong happened: ', error);
     throw error;
   }
 }

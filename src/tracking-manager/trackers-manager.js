@@ -1,7 +1,9 @@
 /* eslint-disable class-methods-use-this */
 const { v4: uuidv4 } = require('uuid');
 
-const { NOT_FOUND } = require('../common/constants');
+const {
+  NOT_FOUND,
+} = require('../common/constants');
 const {
   logger,
   jsonFile,
@@ -42,7 +44,17 @@ class TrackersManager {
 
   getAll() {
     try {
-      return jsonFile.fetch(trackersFilePath);
+      const trackers = jsonFile.fetch(trackersFilePath);
+
+      // Check if there are trackers
+      if (trackers && trackers.length > 0) {
+        return trackers;
+      }
+
+      // Throw a not found error
+      const err = new Error('no trackers were found');
+      err.code = NOT_FOUND;
+      throw err;
     } catch (err) {
       logger.error('[Trackers Manager]-[Get All Trackers] : Could not get trackers, something wrong happened : ', err);
       throw err;
@@ -52,7 +64,7 @@ class TrackersManager {
   async add(data, connection) {
     try {
       // Fetch trackers data
-      let trackersData = jsonFile.fetch(trackersFilePath);
+      let trackersData = jsonFile.fetch(trackersFilePath) || [];
 
       // Add an id and and copy the data in new object
       const idedData = { ...data, id: uuidv4() };
@@ -105,7 +117,7 @@ class TrackersManager {
   delete(id) {
     try {
       // Fetch trackers data
-      let trackersData = jsonFile.fetch(trackersFilePath);
+      let trackersData = jsonFile.fetch(trackersFilePath) || [];
 
       // Stop and delete tracker instance
       const targetTracker = this.#trackers

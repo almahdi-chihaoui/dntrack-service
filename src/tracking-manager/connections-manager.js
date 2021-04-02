@@ -14,7 +14,7 @@ class ConnectionsManager {
   getOne(id, dbms) {
     try {
       // Fetch connections data
-      const connectionsData = jsonFile.fetch(connectionsFilePath);
+      const connectionsData = jsonFile.fetch(connectionsFilePath) || {};
 
       // Check if connection exist
       if (connectionsData[dbms]
@@ -37,7 +37,17 @@ class ConnectionsManager {
 
   getAll() {
     try {
-      return jsonFile.fetch(connectionsFilePath);
+      const connections = jsonFile.fetch(connectionsFilePath);
+
+      // Check if there are connections
+      if (connections && Object.keys(connections).length > 0) {
+        return connections;
+      }
+
+      // Throw a not found error
+      const err = new Error('no connections were found');
+      err.code = NOT_FOUND;
+      throw err;
     } catch (err) {
       logger.error('[Connections Manager]-[Get All Connections] : Could not get connections, something wrong happened : ', err);
       throw err;
@@ -53,7 +63,7 @@ class ConnectionsManager {
       const idedData = { ...data, id: uuidv4() };
 
       // Fetch connections data
-      const connectionsData = jsonFile.fetch(connectionsFilePath);
+      const connectionsData = jsonFile.fetch(connectionsFilePath) || {};
 
       // Add data and dispatch
       logger.info('[Connections Manager]-[Add Connection] : Adding a new connection..');
@@ -89,6 +99,10 @@ class ConnectionsManager {
         // Delete connection data and dispatch
         connectionsData[dbms] = connectionsData[dbms]
           .filter((connection) => connection.id !== id);
+
+        if (connectionsData[dbms].length === 0) {
+          delete connectionsData[dbms];
+        }
 
         jsonFile.dispatch(connectionsData, connectionsFilePath);
 
