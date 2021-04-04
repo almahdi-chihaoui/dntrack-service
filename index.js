@@ -1,6 +1,11 @@
 const express = require('express');
-
 const { StatusCodes } = require('http-status-codes');
+
+if (process.env.NODE_ENV !== 'production') {
+  // eslint-disable-next-line global-require
+  require('dotenv').config();
+}
+
 const { httpLogger } = require('./src/middlewares');
 const {
   connectionsRouter,
@@ -10,7 +15,7 @@ const {
 const { logger } = require('./src/utils');
 const { INTERNAL_SERVER_ERROR } = require('./src/common/constants');
 
-const PORT = 3005;
+const PORT = process.env.PORT || 3000;
 const app = express();
 
 app.use(express.json());
