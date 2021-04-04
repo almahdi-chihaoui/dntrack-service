@@ -1,20 +1,21 @@
 /* eslint-disable class-methods-use-this */
 const { v4: uuidv4 } = require('uuid');
 
-const { NOT_FOUND } = require('../common/constants');
+const {
+  CONNECTIONS_JSON_FILE_PATH,
+  NOT_FOUND,
+} = require('../common/constants');
 const {
   logger,
   jsonFile,
 } = require('../utils');
 const DbsTrackers = require('./trackers');
 
-const connectionsFilePath = './app_data/connections.json';
-
 class ConnectionsManager {
   getOne(id, dbms) {
     try {
       // Fetch connections data
-      const connectionsData = jsonFile.fetch(connectionsFilePath) || {};
+      const connectionsData = jsonFile.fetch(CONNECTIONS_JSON_FILE_PATH) || {};
 
       // Check if connection exist
       if (connectionsData[dbms]
@@ -37,7 +38,7 @@ class ConnectionsManager {
 
   getAll() {
     try {
-      const connections = jsonFile.fetch(connectionsFilePath);
+      const connections = jsonFile.fetch(CONNECTIONS_JSON_FILE_PATH);
 
       // Check if there are connections
       if (connections && Object.keys(connections).length > 0) {
@@ -63,7 +64,7 @@ class ConnectionsManager {
       const idedData = { ...data, id: uuidv4() };
 
       // Fetch connections data
-      const connectionsData = jsonFile.fetch(connectionsFilePath) || {};
+      const connectionsData = jsonFile.fetch(CONNECTIONS_JSON_FILE_PATH) || {};
 
       // Add data and dispatch
       logger.info('[Connections Manager]-[Add Connection] : Adding a new connection..');
@@ -73,7 +74,7 @@ class ConnectionsManager {
         connectionsData[dbms] = [idedData];
       }
 
-      jsonFile.dispatch(connectionsData, connectionsFilePath);
+      jsonFile.dispatch(connectionsData, CONNECTIONS_JSON_FILE_PATH);
 
       logger.info(`[Connections Manager]-[Add Connection] : Connection with id ${idedData.id} was added successfully`);
       return idedData.id;
@@ -90,7 +91,7 @@ class ConnectionsManager {
   delete(id, dbms) {
     try {
       // Fetch connections data
-      const connectionsData = jsonFile.fetch(connectionsFilePath);
+      const connectionsData = jsonFile.fetch(CONNECTIONS_JSON_FILE_PATH);
 
       // Check if connection exist
       if (connectionsData[dbms]
@@ -104,7 +105,7 @@ class ConnectionsManager {
           delete connectionsData[dbms];
         }
 
-        jsonFile.dispatch(connectionsData, connectionsFilePath);
+        jsonFile.dispatch(connectionsData, CONNECTIONS_JSON_FILE_PATH);
 
         logger.info(`[Connections Manager]-[Delete Connection] : Connection with id ${id} was deleted successfully`);
       } else {

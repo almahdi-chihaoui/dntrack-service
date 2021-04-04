@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const {
   NOT_FOUND,
+  TRACKERS_JSON_FILE_PATH,
 } = require('../common/constants');
 const {
   logger,
@@ -12,8 +13,6 @@ const {
 const DbsTrackers = require('./trackers');
 const { getAmqpConnection } = require('../message-broker');
 
-const trackersFilePath = './app_data/trackers.json';
-
 class TrackersManager {
   #trackers = [];
 
@@ -22,7 +21,7 @@ class TrackersManager {
   getOne(id) {
     try {
       // Fetch trackers data
-      const trackersData = jsonFile.fetch(trackersFilePath);
+      const trackersData = jsonFile.fetch(TRACKERS_JSON_FILE_PATH);
 
       // Check if tracker exist
       if (trackersData && trackersData.length > 0) {
@@ -44,7 +43,7 @@ class TrackersManager {
 
   getAll() {
     try {
-      const trackers = jsonFile.fetch(trackersFilePath);
+      const trackers = jsonFile.fetch(TRACKERS_JSON_FILE_PATH);
 
       // Check if there are trackers
       if (trackers && trackers.length > 0) {
@@ -64,7 +63,7 @@ class TrackersManager {
   async add(data, connection) {
     try {
       // Fetch trackers data
-      let trackersData = jsonFile.fetch(trackersFilePath) || [];
+      let trackersData = jsonFile.fetch(TRACKERS_JSON_FILE_PATH) || [];
 
       // Add an id and and copy the data in new object
       const idedData = { ...data, id: uuidv4() };
@@ -100,7 +99,7 @@ class TrackersManager {
 
       // Add data and dispatch
       trackersData = trackersData.concat([idedData]);
-      jsonFile.dispatch(trackersData, trackersFilePath);
+      jsonFile.dispatch(trackersData, TRACKERS_JSON_FILE_PATH);
 
       // Return the id of the newly added tracker
       return idedData.id;
@@ -117,7 +116,7 @@ class TrackersManager {
   delete(id) {
     try {
       // Fetch trackers data
-      let trackersData = jsonFile.fetch(trackersFilePath) || [];
+      let trackersData = jsonFile.fetch(TRACKERS_JSON_FILE_PATH) || [];
 
       // Stop and delete tracker instance
       const targetTracker = this.#trackers
@@ -141,7 +140,7 @@ class TrackersManager {
       // Delete tracker data and dispatch
       trackersData = trackersData
         .filter((tracker) => tracker.id !== id);
-      jsonFile.dispatch(trackersData, trackersFilePath);
+      jsonFile.dispatch(trackersData, TRACKERS_JSON_FILE_PATH);
     } catch (err) {
       logger.error('[Trackers Manager]-[Delete Tracker] : Could not delete tracker, something wrong happened : ', err);
       throw err;

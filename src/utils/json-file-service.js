@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const logger = require('./logger');
 
@@ -9,8 +9,7 @@ function fetch(path) {
       logger.error(`[JSON File Service]-[Fetch]: File ${path} not found!`);
       return undefined;
     }
-    const rawdata = fs.readFileSync(path);
-    const data = JSON.parse(rawdata);
+    const data = fs.readJsonSync(path);
 
     logger.info('[JSON File Service]-[Fetch]: Done');
     return data;
@@ -23,9 +22,9 @@ function fetch(path) {
 function dispatch(data, path) {
   try {
     logger.info(`[JSON File Service]-[Dispatch]: Writing to file ${path}..`);
-    fs.writeFileSync(
+    fs.outputJsonSync(
       path,
-      JSON.stringify(data),
+      data,
     );
 
     logger.info('[JSON File Service]-[Dispatch]: Done');

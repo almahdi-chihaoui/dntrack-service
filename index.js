@@ -13,7 +13,9 @@ const {
 } = require('./src/routes');
 
 const { logger } = require('./src/utils');
-const { INTERNAL_SERVER_ERROR } = require('./src/common/constants');
+const {
+  INTERNAL_SERVER_ERROR,
+} = require('./src/common/constants');
 
 const PORT = process.env.PORT || 3000;
 const app = express();
@@ -38,5 +40,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  logger.info(`Server listening on port ${PORT}`);
+  logger.info(`[Main] : Server listening on port ${PORT}`);
 });
