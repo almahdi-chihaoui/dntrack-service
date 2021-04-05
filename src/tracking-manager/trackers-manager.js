@@ -79,6 +79,7 @@ class TrackersManager {
         tracker = new DbsTrackers[data.dbms](
           connection,
           idedData.query,
+          idedData.resource,
           idedData.ttr,
           this.#messageBrokerConnection,
         );

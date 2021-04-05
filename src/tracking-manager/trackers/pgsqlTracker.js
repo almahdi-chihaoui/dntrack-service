@@ -9,16 +9,25 @@ class PgsqlTracker {
 
   #tracker;
 
+  #resource;
+
   #ttr;
 
   #query;
 
   #messageBroker;
 
-  constructor(connection, query, ttr, messageBrokerConnection) {
+  constructor(
+    connection,
+    query,
+    resource,
+    ttr,
+    messageBrokerConnection,
+  ) {
     this.#connection = connection;
     this.#ttr = ttr;
     this.#query = query;
+    this.#resource = resource;
     this.#messageBroker = new MessageBroker(messageBrokerConnection);
   }
 
@@ -33,7 +42,7 @@ class PgsqlTracker {
       client.query(query)
         .then((res) => {
           // Send results to rabbitmq server
-          this.#messageBroker.sendMessage('test', JSON.stringify(res.rows));
+          this.#messageBroker.sendMessage(this.#resource, JSON.stringify(res.rows));
         })
         .catch((err) => {
           logger.error('[pgsqlTracker] : Error executing query', err);

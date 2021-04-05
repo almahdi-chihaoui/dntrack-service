@@ -7,6 +7,8 @@ const { logger } = require('../../utils');
 class MongoDBTracker {
   #tracker;
 
+  #resource;
+
   #ttr;
 
   #query;
@@ -15,8 +17,15 @@ class MongoDBTracker {
 
   #messageBroker;
 
-  constructor(connection, query, ttr, messageBrokerConnection) {
+  constructor(
+    connection,
+    query,
+    resource,
+    ttr,
+    messageBrokerConnection,
+  ) {
     this.#ttr = ttr;
+    this.#resource = resource;
     this.#query = query;
     this.#uri = MongoDBTracker.getUri(connection);
     this.#messageBroker = new MessageBroker(messageBrokerConnection);
@@ -41,7 +50,7 @@ class MongoDBTracker {
 
           qb(db)
             .then((res) => {
-              this.#messageBroker.sendMessage('test', JSON.stringify(res));
+              this.#messageBroker.sendMessage(this.#resource, JSON.stringify(res));
             }).catch((err) => {
               throw err;
             }).finally(() => {
