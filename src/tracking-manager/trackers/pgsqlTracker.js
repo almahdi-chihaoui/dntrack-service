@@ -1,6 +1,7 @@
 /* eslint-disable class-methods-use-this */
 const { Client } = require('pg');
 
+const { MessageBroker } = require('../../message-broker');
 const { logger } = require('../../utils');
 
 class PgsqlTracker {
@@ -12,10 +13,13 @@ class PgsqlTracker {
 
   #query;
 
-  constructor(connection, query, ttr) {
+  #messageBroker;
+
+  constructor(connection, query, ttr, messageBrokerConnection) {
     this.#connection = connection;
     this.#ttr = ttr;
     this.#query = query;
+    this.#messageBroker = new MessageBroker(messageBrokerConnection);
   }
 
   #queryDataBase(connection, query) {
@@ -28,8 +32,8 @@ class PgsqlTracker {
       // Execute the query asynchronously
       client.query(query)
         .then((res) => {
-          console.log(res.rows);
-          // TODO send results to rabbitmq server
+          // Send results to rabbitmq server
+          this.#messageBroker.sendMessage('test', JSON.stringify(res.rows));
         })
         .catch((err) => {
           logger.error('[pgsqlTracker] : Error executing query', err);
@@ -53,10 +57,10 @@ class PgsqlTracker {
       await client.connect();
 
       // Execute the query
+      // eslint-disable-next-line no-unused-vars
       const queryRes = await client.query(query);
 
       // TODO: Validate queryRes
-      console.log(queryRes.rows);
     } catch (err) {
       logger.error('[pgsqlTracker] : Something wrong happened while validating the query: ', err);
       throw err;
@@ -69,6 +73,7 @@ class PgsqlTracker {
     try {
       logger.info(`[pgsqlTracker] : Starting the tracker with a ttr: ${this.#ttr}`);
       await this.#validateQuery(this.#connection, this.#query);
+      await this.#messageBroker.init();
       this.#queryDataBase(this.#connection, this.#query);
       this.#tracker = setInterval(() => {
         this.#queryDataBase(this.#connection, this.#query);
@@ -81,6 +86,7 @@ class PgsqlTracker {
 
   stopTracker() {
     clearInterval(this.#tracker);
+    this.#messageBroker.closeChannel();
   }
 
   static async testConnection(connection) {
